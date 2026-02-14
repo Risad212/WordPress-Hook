@@ -32,21 +32,6 @@ Think of hooks as:
 2. HOOK TYPES
 ================================================================================
 
-┌─────────────────────────────────────────────────────────────────┐
-│                          HOOKS                                   │
-│                            │                                     │
-│              ┌─────────────┴─────────────┐                      │
-│              │                           │                      │
-│         ┌────▼─────┐              ┌──────▼──────┐              │
-│         │ ACTIONS  │              │   FILTERS   │              │
-│         │          │              │             │              │
-│         │ Execute  │              │   Modify    │              │
-│         │ code     │              │   & return  │              │
-│         │ (no      │              │   data      │              │
-│         │ return)  │              │             │              │
-│         └──────────┘              └─────────────┘              │
-└─────────────────────────────────────────────────────────────────┘
-
 ACTIONS:
 - Do something (send email, save data, echo HTML)
 - Don't return values
@@ -56,31 +41,6 @@ FILTERS:
 - Modify data and return it
 - Always return a value
 - Examples: the_title, the_content, excerpt_length
-
-================================================================================
-3. CORE ARCHITECTURE
-================================================================================
-
-┌──────────────────────────────────────────────────────────────────┐
-│  REGISTRATION PHASE                                               │
-│  ─────────────────                                                │
-│                                                                   │
-│  add_action('hook_name', 'callback')                             │
-│  add_filter('hook_name', 'callback')                             │
-│           │                                                       │
-│           └─────────► Stores in $wp_filter global array          │
-│                                                                   │
-├──────────────────────────────────────────────────────────────────┤
-│  EXECUTION PHASE                                                  │
-│  ───────────────                                                  │
-│                                                                   │
-│  do_action('hook_name', $args)                                   │
-│  apply_filters('hook_name', $value, $args)                       │
-│           │                                                       │
-│           └─────────► Retrieves callbacks from $wp_filter        │
-│                       Executes them in priority order            │
-│                                                                   │
-└──────────────────────────────────────────────────────────────────┘
 
 ================================================================================
 4. GLOBAL STORAGE STRUCTURE: $wp_filter
