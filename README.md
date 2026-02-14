@@ -1,4 +1,6 @@
- #  WORDPRESS HOOK SYSTEM - COMPLETE GUIDE
+================================================================================
+                    WORDPRESS HOOK SYSTEM - COMPLETE GUIDE
+================================================================================
 
 Author: Study Reference for WordPress Developers
 Purpose: Understanding WordPress Hook System Core Architecture
@@ -32,15 +34,47 @@ Think of hooks as:
 2. HOOK TYPES
 ================================================================================
 
+There are TWO types of hooks in WordPress:
+
 ACTIONS:
+- Purpose: Execute code at specific points
 - Do something (send email, save data, echo HTML)
 - Don't return values
 - Examples: wp_head, wp_footer, init, save_post
 
 FILTERS:
-- Modify data and return it
+- Purpose: Modify data and return it
 - Always return a value
+- Used to change/transform data
 - Examples: the_title, the_content, excerpt_length
+
+KEY DIFFERENCE:
+- Actions: DO something (side effects)
+- Filters: CHANGE something (return modified data)
+
+================================================================================
+3. CORE ARCHITECTURE
+================================================================================
+
+REGISTRATION PHASE:
+When you call add_action() or add_filter(), WordPress stores your callback 
+function in a global array called $wp_filter.
+
+Example:
+  add_action('hook_name', 'callback')
+  add_filter('hook_name', 'callback')
+  
+  Result: Stores in $wp_filter global array
+
+EXECUTION PHASE:
+When WordPress calls do_action() or apply_filters(), it retrieves all callbacks
+from $wp_filter and executes them in priority order.
+
+Example:
+  do_action('hook_name', $args)
+  apply_filters('hook_name', $value, $args)
+  
+  Result: Retrieves callbacks from $wp_filter and executes in priority order
 
 ================================================================================
 4. GLOBAL STORAGE STRUCTURE: $wp_filter
@@ -80,90 +114,96 @@ $wp_filter = array(
 5. FUNCTION REFERENCE
 ================================================================================
 
-┌──────────────────────────────────────────────────────────────────┐
-│ REGISTRATION FUNCTIONS                                            │
-└──────────────────────────────────────────────────────────────────┘
+REGISTRATION FUNCTIONS:
+-----------------------
 
 add_filter($hook_name, $callback, $priority = 10, $accepted_args = 1)
-  ├─ Registers a callback to a filter hook
-  ├─ Returns modified data
-  └─ Example: add_filter('the_title', 'my_function', 10, 1);
+  - Registers a callback to a filter hook
+  - Returns modified data
+  - Example: add_filter('the_title', 'my_function', 10, 1);
 
 add_action($hook_name, $callback, $priority = 10, $accepted_args = 1)
-  ├─ Registers a callback to an action hook
-  ├─ Just executes code (no return)
-  ├─ Internally calls add_filter()
-  └─ Example: add_action('init', 'my_function', 10);
+  - Registers a callback to an action hook
+  - Just executes code (no return)
+  - Internally calls add_filter()
+  - Example: add_action('init', 'my_function', 10);
 
-┌──────────────────────────────────────────────────────────────────┐
-│ EXECUTION FUNCTIONS                                               │
-└──────────────────────────────────────────────────────────────────┘
+
+EXECUTION FUNCTIONS:
+--------------------
 
 apply_filters($hook_name, $value, ...$args)
-  ├─ Executes all callbacks for a filter
-  ├─ Passes $value through each callback
-  ├─ Returns the final modified value
-  └─ Example: $title = apply_filters('the_title', $title);
+  - Executes all callbacks for a filter
+  - Passes $value through each callback
+  - Returns the final modified value
+  - Example: $title = apply_filters('the_title', $title);
 
 do_action($hook_name, ...$args)
-  ├─ Executes all callbacks for an action
-  ├─ No return value
-  └─ Example: do_action('wp_footer');
+  - Executes all callbacks for an action
+  - No return value
+  - Example: do_action('wp_footer');
 
-┌──────────────────────────────────────────────────────────────────┐
-│ REMOVAL FUNCTIONS                                                 │
-└──────────────────────────────────────────────────────────────────┘
+
+REMOVAL FUNCTIONS:
+------------------
 
 remove_filter($hook_name, $callback, $priority = 10)
-  └─ Removes a callback from a filter
+  - Removes a callback from a filter
 
 remove_action($hook_name, $callback, $priority = 10)
-  └─ Removes a callback from an action
+  - Removes a callback from an action
 
 has_filter($hook_name, $callback = false)
-  └─ Check if filter has callbacks
+  - Check if filter has callbacks
 
 has_action($hook_name, $callback = false)
-  └─ Check if action has callbacks
+  - Check if action has callbacks
 
 ================================================================================
 6. EXECUTION FLOW
 ================================================================================
 
-FILTER FLOW:
-───────────
+FILTER EXECUTION FLOW:
+----------------------
 
-Input → apply_filters('my_filter', $value)
-  │
-  ├─► Get callbacks from $wp_filter['my_filter']
-  ├─► Sort by priority (10, 20, 30...)
-  │
-  ├─► Priority 10:
-  │     ├─ callback_1($value) → returns $new_value
-  │     └─ callback_2($new_value) → returns $newer_value
-  │
-  ├─► Priority 20:
-  │     └─ callback_3($newer_value) → returns $final_value
-  │
-  └─► Return $final_value
+Step 1: Input value provided
+  "hello"
+
+Step 2: apply_filters('my_filter', $value) is called
+
+Step 3: WordPress gets callbacks from $wp_filter['my_filter']
+
+Step 4: Sorts callbacks by priority (10, 20, 30...)
+
+Step 5: Executes callbacks in order:
+  Priority 10:
+    - callback_1($value) returns $new_value
+    - callback_2($new_value) returns $newer_value
+  
+  Priority 20:
+    - callback_3($newer_value) returns $final_value
+
+Step 6: Returns the final modified value
 
 
-ACTION FLOW:
-───────────
+ACTION EXECUTION FLOW:
+----------------------
 
-do_action('my_action', $arg1, $arg2)
-  │
-  ├─► Get callbacks from $wp_filter['my_action']
-  ├─► Sort by priority
-  │
-  ├─► Priority 10:
-  │     ├─ callback_1($arg1, $arg2) → [executes]
-  │     └─ callback_2($arg1, $arg2) → [executes]
-  │
-  ├─► Priority 20:
-  │     └─ callback_3($arg1, $arg2) → [executes]
-  │
-  └─► Complete (no return)
+Step 1: do_action('my_action', $arg1, $arg2) is called
+
+Step 2: WordPress gets callbacks from $wp_filter['my_action']
+
+Step 3: Sorts callbacks by priority
+
+Step 4: Executes callbacks in order:
+  Priority 10:
+    - callback_1($arg1, $arg2) executes
+    - callback_2($arg1, $arg2) executes
+  
+  Priority 20:
+    - callback_3($arg1, $arg2) executes
+
+Step 5: Complete (no return value)
 
 ================================================================================
 7. PRIORITY SYSTEM
@@ -190,9 +230,8 @@ Result: uppercase → add_prefix → add_suffix
 8. REAL EXAMPLES
 ================================================================================
 
-┌──────────────────────────────────────────────────────────────────┐
-│ FILTER EXAMPLE                                                    │
-└──────────────────────────────────────────────────────────────────┘
+FILTER EXAMPLE:
+---------------
 
 // Register callbacks
 add_filter('the_title', 'make_uppercase', 10, 1);
@@ -211,13 +250,15 @@ $title = 'hello world';
 $result = apply_filters('the_title', $title);
 // Result: "🎉 HELLO WORLD"
 
-FLOW:
-"hello world" → make_uppercase → "HELLO WORLD" → add_emoji → "🎉 HELLO WORLD"
+HOW IT WORKS:
+Step 1: "hello world"
+Step 2: make_uppercase runs (priority 10) → "HELLO WORLD"
+Step 3: add_emoji runs (priority 20) → "🎉 HELLO WORLD"
+Step 4: Final result returned
 
 
-┌──────────────────────────────────────────────────────────────────┐
-│ ACTION EXAMPLE                                                    │
-└──────────────────────────────────────────────────────────────────┘
+ACTION EXAMPLE:
+---------------
 
 // Register callbacks
 add_action('wp_footer', 'add_copyright', 10);
@@ -239,9 +280,8 @@ OUTPUT:
 <script>console.log("Tracked");</script>
 
 
-┌──────────────────────────────────────────────────────────────────┐
-│ MULTIPLE ARGUMENTS EXAMPLE                                        │
-└──────────────────────────────────────────────────────────────────┘
+MULTIPLE ARGUMENTS EXAMPLE:
+---------------------------
 
 // Register with 3 arguments
 add_filter('custom_price', 'apply_discount', 10, 3);
@@ -258,9 +298,8 @@ $final_price = apply_filters('custom_price', 100, 123, 456);
 // Result: 90
 
 
-┌──────────────────────────────────────────────────────────────────┐
-│ REMOVING HOOKS EXAMPLE                                            │
-└──────────────────────────────────────────────────────────────────┘
+REMOVING HOOKS EXAMPLE:
+-----------------------
 
 // Remove a specific callback
 remove_action('wp_footer', 'add_analytics', 20);
@@ -272,22 +311,20 @@ remove_all_actions('wp_footer');
 9. QUICK REFERENCE CHEAT SHEET
 ================================================================================
 
-┌─────────────────────┬──────────────────────────────────────────────┐
-│ FUNCTION            │ PURPOSE                                      │
-├─────────────────────┼──────────────────────────────────────────────┤
-│ add_filter()        │ Register filter callback                     │
-│ add_action()        │ Register action callback                     │
-│ apply_filters()     │ Execute filter, return modified value        │
-│ do_action()         │ Execute action, no return                    │
-│ remove_filter()     │ Unregister filter callback                   │
-│ remove_action()     │ Unregister action callback                   │
-│ has_filter()        │ Check if filter exists                       │
-│ has_action()        │ Check if action exists                       │
-│ current_filter()    │ Get name of current filter being executed    │
-│ current_action()    │ Get name of current action being executed    │
-│ doing_filter()      │ Check if specific filter is being executed   │
-│ doing_action()      │ Check if specific action is being executed   │
-└─────────────────────┴──────────────────────────────────────────────┘
+FUNCTION                PURPOSE
+---------------------------------------------------------------------------
+add_filter()            Register filter callback
+add_action()            Register action callback
+apply_filters()         Execute filter, return modified value
+do_action()             Execute action, no return
+remove_filter()         Unregister filter callback
+remove_action()         Unregister action callback
+has_filter()            Check if filter exists
+has_action()            Check if action exists
+current_filter()        Get name of current filter being executed
+current_action()        Get name of current action being executed
+doing_filter()          Check if specific filter is being executed
+doing_action()          Check if specific action is being executed
 
 ================================================================================
 COMMON PATTERNS
@@ -333,17 +370,23 @@ COMMON PATTERNS
 KEY DIFFERENCES: ACTIONS vs FILTERS
 ================================================================================
 
-┌─────────────────────┬─────────────────┬─────────────────────────────┐
-│ FEATURE             │ ACTIONS         │ FILTERS                     │
-├─────────────────────┼─────────────────┼─────────────────────────────┤
-│ Purpose             │ Execute code    │ Modify data                 │
-│ Return value        │ None (void)     │ Required                    │
-│ Registration        │ add_action()    │ add_filter()                │
-│ Execution           │ do_action()     │ apply_filters()             │
-│ Use case            │ Send email,     │ Change title, modify        │
-│                     │ save data       │ content, alter arrays       │
-│ Example             │ wp_footer       │ the_title                   │
-└─────────────────────┴─────────────────┴─────────────────────────────┘
+ACTIONS:
+--------
+- Purpose: Execute code
+- Return value: None (void)
+- Registration: add_action()
+- Execution: do_action()
+- Use case: Send email, save data, output HTML
+- Examples: wp_footer, init, save_post
+
+FILTERS:
+--------
+- Purpose: Modify data
+- Return value: Required (must return something)
+- Registration: add_filter()
+- Execution: apply_filters()
+- Use case: Change title, modify content, alter arrays
+- Examples: the_title, the_content, excerpt_length
 
 ================================================================================
 BEST PRACTICES
