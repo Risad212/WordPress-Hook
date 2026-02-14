@@ -1,6 +1,5 @@
-================================================================================
-                    WORDPRESS HOOK SYSTEM - COMPLETE GUIDE
-================================================================================
+
+# WORDPRESS HOOK SYSTEM - COMPLETE GUIDE
 
 A clear reference for understanding WordPress hooks.
 Perfect for GitHub and quick reference.
