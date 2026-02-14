@@ -1,13 +1,10 @@
-
 # WORDPRESS HOOK SYSTEM - COMPLETE GUIDE
 
 A clear reference for understanding WordPress hooks.
 Perfect for GitHub and quick reference.
 
 
-================================================================================
-                              TABLE OF CONTENTS
-================================================================================
+TABLE OF CONTENTS
 
 1. What Are Hooks?
 2. Actions vs Filters
@@ -20,24 +17,26 @@ Perfect for GitHub and quick reference.
 9. Quick Cheat Sheet
 
 
-================================================================================
-                              1. WHAT ARE HOOKS?
-================================================================================
+---
+
+
+1. WHAT ARE HOOKS?
 
 Hooks let you inject custom code into WordPress at specific points.
 
 Why use hooks?
-  • Modify WordPress behavior without editing core files
-  • Extend plugins and themes safely
-  • Run code at the right time in WordPress lifecycle
+• Modify WordPress behavior without editing core files
+• Extend plugins and themes safely
+• Run code at the right time in WordPress lifecycle
 
 
-================================================================================
-                         2. ACTIONS vs FILTERS
-================================================================================
+---
+
+
+2. ACTIONS vs FILTERS
 
 ACTIONS - Execute Code
------------------------
+
 • Purpose: DO something (send email, save data, output HTML)
 • Return: Nothing
 • Register: add_action()
@@ -45,7 +44,7 @@ ACTIONS - Execute Code
 • Examples: wp_head, wp_footer, init, save_post
 
 FILTERS - Modify Data
------------------------
+
 • Purpose: CHANGE something (modify text, alter arrays)
 • Return: Modified value (required!)
 • Register: add_filter()
@@ -53,31 +52,32 @@ FILTERS - Modify Data
 • Examples: the_title, the_content, excerpt_length
 
 Quick Rule
------------
+
 If it RETURNS data → Filter
 If it DOES something → Action
 
 
-================================================================================
-                            3. HOW IT WORKS
-================================================================================
+---
+
+
+3. HOW IT WORKS
 
 Step 1: REGISTER (add hook)
------------------------------
+
 add_action('hook_name', 'my_function');
 add_filter('hook_name', 'my_function');
 
 WordPress stores this in global $wp_filter array.
 
 Step 2: EXECUTE (run hook)
------------------------------
+
 do_action('hook_name');
 apply_filters('hook_name', $value);
 
 WordPress runs all registered callbacks in priority order.
 
 Global Storage
---------------
+
 $wp_filter = array(
     'hook_name' => array(
         10 => array('function1'),
@@ -86,43 +86,45 @@ $wp_filter = array(
 );
 
 
-================================================================================
-                          4. FUNCTION REFERENCE
-================================================================================
+---
+
+
+4. FUNCTION REFERENCE
 
 REGISTRATION
--------------
+
 add_filter($hook, $callback, $priority, $accepted_args)
 add_action($hook, $callback, $priority, $accepted_args)
 
 Parameters:
-  $hook           - Hook name (string)
-  $callback       - Your function name
-  $priority       - Execution order (default: 10)
-  $accepted_args  - Number of arguments (default: 1)
+$hook           - Hook name (string)
+$callback       - Your function name
+$priority       - Execution order (default: 10)
+$accepted_args  - Number of arguments (default: 1)
 
 EXECUTION
-----------
+
 apply_filters($hook, $value, ...$args)  - Returns modified value
 do_action($hook, ...$args)              - Returns nothing
 
 REMOVAL
---------
+
 remove_filter($hook, $callback, $priority)
 remove_action($hook, $callback, $priority)
 
 CHECKING
----------
+
 has_filter($hook, $callback)
 has_action($hook, $callback)
 
 
-================================================================================
-                           5. EXECUTION FLOW
-================================================================================
+---
+
+
+5. EXECUTION FLOW
 
 FILTER FLOW
-------------
+
 1. apply_filters('my_hook', 'hello') is called
 2. WordPress finds callbacks in $wp_filter['my_hook']
 3. Sorts by priority (10, 20, 30...)
@@ -132,7 +134,7 @@ FILTER FLOW
 5. Returns final value: 'HELLO WORLD'
 
 ACTION FLOW
-------------
+
 1. do_action('my_hook', $arg1, $arg2) is called
 2. WordPress finds callbacks in $wp_filter['my_hook']
 3. Sorts by priority
@@ -140,14 +142,15 @@ ACTION FLOW
 5. Done (no return value)
 
 
-================================================================================
-                           6. PRIORITY SYSTEM
-================================================================================
+---
+
+
+6. PRIORITY SYSTEM
 
 Priority = Execution Order
 
 Lower Number = Runs First
----------------------------
+
 1   ← Highest priority (runs first)
 5
 10  ← DEFAULT
@@ -156,18 +159,19 @@ Lower Number = Runs First
 100 ← Lowest priority (runs last)
 
 Example
---------
+
 add_filter('the_title', 'uppercase', 5);   // Runs FIRST
 add_filter('the_title', 'add_prefix', 10); // Runs SECOND
 add_filter('the_title', 'add_suffix', 20); // Runs THIRD
 
 
-================================================================================
-                           7. CODE EXAMPLES
-================================================================================
+---
+
+
+7. CODE EXAMPLES
 
 Example 1: Simple Filter
--------------------------
+
 add_filter('the_title', 'make_uppercase');
 
 function make_uppercase($title) {
@@ -180,7 +184,7 @@ $title = apply_filters('the_title', 'hello');
 
 
 Example 2: Filter with Multiple Callbacks
--------------------------------------------
+
 add_filter('the_title', 'make_uppercase', 10);
 add_filter('the_title', 'add_emoji', 20);
 
@@ -200,7 +204,7 @@ $result = apply_filters('the_title', 'hello');
 
 
 Example 3: Simple Action
---------------------------
+
 add_action('wp_footer', 'add_copyright');
 
 function add_copyright() {
@@ -211,7 +215,7 @@ function add_copyright() {
 
 
 Example 4: Action with Arguments
-----------------------------------
+
 add_action('save_post', 'log_post_save', 10, 2);
 
 function log_post_save($post_id, $post) {
@@ -222,7 +226,7 @@ function log_post_save($post_id, $post) {
 
 
 Example 5: Multiple Arguments in Filter
------------------------------------------
+
 add_filter('custom_price', 'apply_discount', 10, 3);
 
 function apply_discount($price, $user_id, $product_id) {
@@ -238,7 +242,7 @@ $final = apply_filters('custom_price', 100, 123, 456);
 
 
 Example 6: Class Method as Callback
--------------------------------------
+
 class MyPlugin {
     public function __construct() {
         add_action('init', array($this, 'initialize'));
@@ -253,14 +257,14 @@ new MyPlugin();
 
 
 Example 7: Anonymous Function
--------------------------------
+
 add_filter('the_title', function($title) {
     return strtoupper($title);
 }, 10, 1);
 
 
 Example 8: Removing Hooks
----------------------------
+
 // Remove specific callback
 remove_action('wp_footer', 'unwanted_function', 10);
 
@@ -268,36 +272,35 @@ remove_action('wp_footer', 'unwanted_function', 10);
 remove_filter('the_title', 'unwanted_filter', 20);
 
 
-================================================================================
-                          8. BEST PRACTICES
-================================================================================
+---
+
+
+8. BEST PRACTICES
 
 1. Always Return in Filters
------------------------------
+
 ✓ Good:
-  function my_filter($value) {
-      return strtoupper($value);
-  }
+function my_filter($value) {
+    return strtoupper($value);
+}
 
 ✗ Bad:
-  function my_filter($value) {
-      echo strtoupper($value); // DON'T echo in filters!
-  }
+function my_filter($value) {
+    echo strtoupper($value); // DON'T echo in filters!
+}
 
 
 2. Use Unique Function Names
-------------------------------
+
 ✓ Good: mytheme_custom_title()
 ✗ Bad: custom_title() ← might conflict
 
 
 3. Specify Arguments Count
-----------------------------
+
 If your function uses multiple arguments:
 
 add_filter('my_hook', 'my_func', 10, 3);
-                                    ↑
-                        This is important!
 
 function my_func($arg1, $arg2, $arg3) {
     return $arg1;
@@ -305,7 +308,7 @@ function my_func($arg1, $arg2, $arg3) {
 
 
 4. Use Appropriate Priority
------------------------------
+
 • Use 10 (default) for most cases
 • Use 5-9 to run early
 • Use 11-20 to run late
@@ -313,26 +316,25 @@ function my_func($arg1, $arg2, $arg3) {
 
 
 5. Remove Hooks Carefully
----------------------------
+
 // Must match exact parameters
 remove_action('init', 'my_func', 10);
-                              ↑
-                    Same priority as when added
 
 
 6. Check Before Removing
---------------------------
+
 if (has_action('init', 'unwanted_func')) {
     remove_action('init', 'unwanted_func');
 }
 
 
-================================================================================
-                         9. QUICK CHEAT SHEET
-================================================================================
+---
+
+
+9. QUICK CHEAT SHEET
 
 Common Functions
------------------
+
 add_filter()       - Register filter
 add_action()       - Register action
 apply_filters()    - Run filter, return value
@@ -344,7 +346,7 @@ has_action()       - Check if action exists
 
 
 Common Patterns
-----------------
+
 // Basic filter
 add_filter('hook', 'function_name', 10, 1);
 
@@ -365,25 +367,25 @@ remove_action('hook', 'function_name', 10);
 
 
 Common WordPress Hooks
------------------------
+
 ACTIONS:
-  init              - After WordPress loads
-  wp_head           - In <head> section
-  wp_footer         - Before </body>
-  admin_init        - Admin area initialization
-  save_post         - When post is saved
-  wp_enqueue_scripts - Load CSS/JS
+init              - After WordPress loads
+wp_head           - In <head> section
+wp_footer         - Before </body>
+admin_init        - Admin area initialization
+save_post         - When post is saved
+wp_enqueue_scripts - Load CSS/JS
 
 FILTERS:
-  the_title         - Post/page title
-  the_content       - Post content
-  the_excerpt       - Post excerpt
-  body_class        - <body> CSS classes
-  excerpt_length    - Excerpt word count
+the_title         - Post/page title
+the_content       - Post content
+the_excerpt       - Post excerpt
+body_class        - <body> CSS classes
+excerpt_length    - Excerpt word count
 
 
 Debugging Hooks
-----------------
+
 // See all registered hooks
 var_dump($GLOBALS['wp_filter']);
 
@@ -394,12 +396,12 @@ var_dump($GLOBALS['wp_filter']['the_title']);
 $current = current_filter();
 
 
-================================================================================
-                     CORE IMPLEMENTATION (SIMPLIFIED)
-================================================================================
+---
+
+
+CORE IMPLEMENTATION (SIMPLIFIED)
 
 How WordPress Actually Does It
---------------------------------
 
 <?php
 // Global storage
@@ -460,9 +462,10 @@ function do_action($hook, ...$args) {
 ?>
 
 
-================================================================================
-                            KEY TAKEAWAYS
-================================================================================
+---
+
+
+KEY TAKEAWAYS
 
 1. Actions DO things, Filters CHANGE things
 2. add_action() is just add_filter() with a different name
@@ -473,35 +476,35 @@ function do_action($hook, ...$args) {
 7. Specify accepted_args when using multiple parameters
 
 
-================================================================================
-                               REMEMBER
-================================================================================
+---
+
+
+REMEMBER
 
 Basic Syntax
--------------
+
 add_filter('hook_name', 'my_function', 10, 1);
 add_action('hook_name', 'my_function', 10, 1);
 
 Filter Function
-----------------
+
 function my_function($value) {
     // Modify $value
     return $value; // MUST return!
 }
 
 Action Function
-----------------
+
 function my_function() {
     // Do something
     // No return needed
 }
 
 
-================================================================================
-                              END OF GUIDE
-================================================================================
+---
+
+
+END OF GUIDE
 
 Save this for quick reference!
 Keep learning and building awesome WordPress sites!
-
-================================================================================
