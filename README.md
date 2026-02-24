@@ -183,18 +183,40 @@ Internally:
 5. Execute each function
 ```
 
-### Visual Flow
+---
 
-```
-do_action('init')
-        ↓
-$wp_filter['init']
-        ↓
-WP_Hook object
-        ↓
-callbacks grouped by priority
-        ↓
-Loop & execute
+## 🔄 Full Internal Flow Diagram
+
+```mermaid
+flowchart TD
+
+A[Developer calls add_action('init','my_function',10)] --> B[add_action calls add_filter]
+
+B --> C{Does $wp_filter['init'] exist?}
+
+C -- No --> D[Create new WP_Hook object]
+C -- Yes --> E[Use existing WP_Hook object]
+
+D --> F[Store object in $wp_filter['init']]
+E --> F
+
+F --> G[WP_Hook->add_filter()]
+G --> H[Store callback inside callbacks array]
+H --> I[Group by priority]
+I --> J[Hook Registered Successfully]
+
+J --> K[Later: WordPress runs do_action('init')]
+
+K --> L{Does $wp_filter['init'] exist?}
+
+L -- No --> M[Nothing happens]
+L -- Yes --> N[Call WP_Hook->do_action()]
+
+N --> O[Sort callbacks by priority]
+O --> P[Loop through priority groups]
+P --> Q[Loop through each callback]
+Q --> R[Execute using call_user_func_array()]
+R --> S[All callbacks executed]
 ```
 
 ---
