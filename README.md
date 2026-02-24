@@ -77,52 +77,7 @@ $wp_filter['init']->add_filter(
 
 ---
 
-## 4️⃣ Full Internal Structure Example
-
-After:
-
-```php
-add_action('init', 'funcA', 10);
-add_action('init', 'funcB', 20);
-```
-
-The structure becomes:
-
-```php
-$wp_filter = [
-
-  'init' => WP_Hook Object
-    (
-      [callbacks] => [
-        10 => [
-          'unique_id_1' => [
-            'function'      => 'funcA',
-            'accepted_args' => 1
-          ]
-        ],
-        20 => [
-          'unique_id_2' => [
-            'function'      => 'funcB',
-            'accepted_args' => 1
-          ]
-        ]
-      ]
-    )
-
-];
-```
-
-### Structure Explained
-
-- Level 1 → Hook name  
-- Level 2 → Priority number  
-- Level 3 → Callback data  
-
----
-
-## 5️⃣ Simplified `WP_Hook` Class
-
-Very simplified version of the real class:
+## 4️⃣ Simplified `WP_Hook` Class
 
 ```php
 class WP_Hook {
@@ -130,7 +85,6 @@ class WP_Hook {
     public $callbacks = [];
 
     public function add_filter($hook, $callback, $priority, $accepted_args) {
-
         $this->callbacks[$priority][] = [
             'function'      => $callback,
             'accepted_args' => $accepted_args,
@@ -138,16 +92,10 @@ class WP_Hook {
     }
 
     public function do_action($args) {
-
         ksort($this->callbacks);
-
         foreach ($this->callbacks as $priority => $functions) {
             foreach ($functions as $data) {
-
-                call_user_func_array(
-                    $data['function'],
-                    $args
-                );
+                call_user_func_array($data['function'], $args);
             }
         }
     }
@@ -165,86 +113,84 @@ Nothing magical.
 
 ---
 
-## 6️⃣ Execution Flow
-
-When WordPress runs:
-
-```php
-do_action('init');
-```
-
-Internally:
-
-```
-1. Check $wp_filter['init']
-2. Call WP_Hook->do_action()
-3. Sort priorities
-4. Loop through callbacks
-5. Execute each function
-```
-
----
-
-## 🔄 Full Internal Flow Diagram
+## 5️⃣ Full Internal Hook Flow
 
 ```mermaid
 flowchart TD
-
-A[Developer calls add_action('init','my_function',10)] --> B[add_action calls add_filter]
-
-B --> C{Does $wp_filter['init'] exist?}
-
+A[Developer calls add_action init my_function 10] --> B[add_action calls add_filter]
+B --> C{Does wp_filter init exist?}
 C -- No --> D[Create new WP_Hook object]
 C -- Yes --> E[Use existing WP_Hook object]
-
-D --> F[Store object in $wp_filter['init']]
+D --> F[Store object in wp_filter init]
 E --> F
-
-F --> G[WP_Hook->add_filter()]
+F --> G[WP_Hook add_filter method]
 G --> H[Store callback inside callbacks array]
 H --> I[Group by priority]
 I --> J[Hook Registered Successfully]
-
-J --> K[Later: WordPress runs do_action('init')]
-
-K --> L{Does $wp_filter['init'] exist?}
-
+J --> K[Later WordPress runs do_action init]
+K --> L{Does wp_filter init exist?}
 L -- No --> M[Nothing happens]
-L -- Yes --> N[Call WP_Hook->do_action()]
-
+L -- Yes --> N[Call WP_Hook do_action]
 N --> O[Sort callbacks by priority]
 O --> P[Loop through priority groups]
 P --> Q[Loop through each callback]
-Q --> R[Execute using call_user_func_array()]
+Q --> R[Execute using call_user_func_array]
 R --> S[All callbacks executed]
 ```
 
 ---
 
-## 7️⃣ Why Unique IDs Exist
+## 6️⃣ Beginner-Friendly Flow
 
-WordPress creates a unique ID for each callback.
+```mermaid
+flowchart TD
+A[add_action called] --> B[add_filter internally used]
+B --> C{Hook exists in wp_filter?}
+C -- No --> D[Create WP_Hook instance]
+C -- Yes --> E[Use existing instance]
+D --> F[Store in global wp_filter]
+E --> F
+F --> G[Register callback with priority]
+G --> H[Later do_action triggered]
+H --> I[Sort callbacks by priority]
+I --> J[Loop & execute callbacks]
+J --> K[Done]
+```
 
-Why?
+---
 
-So this works correctly:
+## 7️⃣ Filter Value Flow (Step by Step)
+
+```mermaid
+flowchart TD
+A[Initial value: "hello"] --> B[apply_filters 'the_title']
+B --> C[Callback 1: strtoupper -> "HELLO"]
+C --> D[Callback 2: add_emoji -> "🎉 HELLO"]
+D --> E[Final value returned: "🎉 HELLO"]
+```
+
+---
+
+## 8️⃣ Why Unique IDs Exist
+
+WordPress creates a unique ID for each callback so:
 
 ```php
 remove_action('init', 'my_function', 10);
 ```
 
-Without unique IDs, removing callbacks would fail.
+works correctly. Without unique IDs, removing callbacks could fail.
 
 ---
 
-## 8️⃣ Key Takeaways
+## 9️⃣ Key Takeaways
 
-- `add_action()` is an alias of `add_filter()`
-- Hooks are stored in `$wp_filter`
-- Each hook is a `WP_Hook` object
-- Callbacks are grouped by priority
-- Lower priority runs first
-- Internally → arrays + objects + loops
+- `add_action()` is an alias of `add_filter()`  
+- Hooks are stored in `$wp_filter`  
+- Each hook is a `WP_Hook` object  
+- Callbacks are grouped by priority  
+- Lower priority runs first  
+- Internally → arrays + objects + loops  
 
 ---
 
