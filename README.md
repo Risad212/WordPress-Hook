@@ -1,6 +1,6 @@
 # WordPress Hook System – Behind the Scenes
 
-A simple and clear explanation of how `add_action()` and `add_filter()` work internally in WordPress.
+A simple and clear explanation of how `add_action()` and `add_filter()` work internally in WordPress.  
 
 No long theory. Just how the engine works.
 
@@ -52,7 +52,7 @@ Example:
 add_action('init', 'my_function', 10, 1);
 ```
 
-Internally WordPress does something like:
+Internally WordPress does:
 
 ```php
 global $wp_filter;
@@ -61,15 +61,10 @@ if (!isset($wp_filter['init'])) {
     $wp_filter['init'] = new WP_Hook();
 }
 
-$wp_filter['init']->add_filter(
-    'init',
-    'my_function',
-    10,
-    1
-);
+$wp_filter['init']->add_filter('init','my_function',10,1);
 ```
 
-### Step-by-step:
+Step-by-step:
 
 1. Check if hook exists  
 2. If not → create `WP_Hook` instance  
@@ -113,34 +108,7 @@ Nothing magical.
 
 ---
 
-## 5️⃣ Full Internal Hook Flow
-
-```mermaid
-flowchart TD
-A[Developer calls add_action init my_function 10] --> B[add_action calls add_filter]
-B --> C{Does wp_filter init exist?}
-C -- No --> D[Create new WP_Hook object]
-C -- Yes --> E[Use existing WP_Hook object]
-D --> F[Store object in wp_filter init]
-E --> F
-F --> G[WP_Hook add_filter method]
-G --> H[Store callback inside callbacks array]
-H --> I[Group by priority]
-I --> J[Hook Registered Successfully]
-J --> K[Later WordPress runs do_action init]
-K --> L{Does wp_filter init exist?}
-L -- No --> M[Nothing happens]
-L -- Yes --> N[Call WP_Hook do_action]
-N --> O[Sort callbacks by priority]
-O --> P[Loop through priority groups]
-P --> Q[Loop through each callback]
-Q --> R[Execute using call_user_func_array]
-R --> S[All callbacks executed]
-```
-
----
-
-## 6️⃣ Beginner-Friendly Flow
+## 5️⃣ Beginner-Friendly Flow
 
 ```mermaid
 flowchart TD
@@ -159,19 +127,7 @@ J --> K[Done]
 
 ---
 
-## 7️⃣ Filter Value Flow (Step by Step)
-
-```mermaid
-flowchart TD
-A[Initial value: "hello"] --> B[apply_filters 'the_title']
-B --> C[Callback 1: strtoupper -> "HELLO"]
-C --> D[Callback 2: add_emoji -> "🎉 HELLO"]
-D --> E[Final value returned: "🎉 HELLO"]
-```
-
----
-
-## 8️⃣ Why Unique IDs Exist
+## 6️⃣ Why Unique IDs Exist
 
 WordPress creates a unique ID for each callback so:
 
@@ -183,7 +139,7 @@ works correctly. Without unique IDs, removing callbacks could fail.
 
 ---
 
-## 9️⃣ Key Takeaways
+## 7️⃣ Key Takeaways
 
 - `add_action()` is an alias of `add_filter()`  
 - Hooks are stored in `$wp_filter`  
